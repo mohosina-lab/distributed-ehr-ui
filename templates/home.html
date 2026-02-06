@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container col-md-5 mx-auto mt-5">
+  <div class="card p-4 shadow-sm">
+    <h2 class="mb-3 text-center">Distributed EHR</h2>
+
+    <p class="text-muted text-center mb-4">
+      Please log in to access the system.
+    </p>
+
+    <div class="d-grid gap-3">
+      <a class="btn btn-primary btn-lg" href="/login?role=doctor">
+        Login as Doctor or Patient
+      </a>
+    </div>
+
+    <hr class="my-4">
+
+    <p class="small text-muted text-center mb-0">
+      Learn more <a href="/about">About Us</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

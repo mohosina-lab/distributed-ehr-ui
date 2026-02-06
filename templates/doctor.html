@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container col-md-7 mx-auto mt-4">
+  <div class="card p-4 shadow-sm">
+    <h2 class="mb-3">Doctor Portal</h2>
+    <p class="text-muted">
+      Doctors can create patients, view any patient record, and update patient data. Patient access tokens are generated on creation.
+    </p>
+
+    <!-- Create Patient -->
+    
+    <h5 class="mt-2 mb-2"> Create New Patient</h5>
+    <form method="POST" action="/doctor/create-patient">
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Patient ID</label>
+          <input class="form-control" name="patient_id" placeholder="e.g., P022601" required>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Full Name</label>
+          <input class="form-control" name="name" placeholder="e.g., Mohosina" required>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Birth Date</label>
+          <input class="form-control" name="birth_date" placeholder="YYYY-MM-DD" required>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Blood Type</label>
+          <input class="form-control" name="blood_type" placeholder="e.g., A+">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Height (cm)</label>
+          <input class="form-control" name="height" type="number">
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Weight (kg)</label>
+          <input class="form-control" name="weight" type="number">
+        </div>
+      </div>
+
+      <button class="btn btn-primary w-100">Create Patient</button>
+    </form>
+
+    {% if created_patient %}
+      <div class="alert alert-success mt-3">
+        <div><strong>Patient created</strong></div>
+        <div><strong>ID:</strong> {{ created_patient.id }}</div>
+        <div><strong>Name:</strong> {{ created_patient.name }}</div>
+        <div><strong>Token:</strong> <code>{{ created_patient.token }}</code></div>
+        <div class="small text-muted mt-2">Give this token to the patient for login.</div>
+      </div>
+    {% endif %}
+
+    <hr class="my-4">
+
+   
+    <!-- View Patient -->
+    <h5 class="mb-2">View Patient Record</h5>
+    <form method="GET" action="/doctor">
+      <div class="input-group mb-3">
+        <span class="input-group-text">Patient ID</span>
+        <input class="form-control" name="view_patient_id" placeholder="e.g., p001" value="{{ view_patient_id or '' }}">
+        <button class="btn btn-outline-primary" type="submit">Load</button>
+      </div>
+      <div class="small text-muted">
+        Viewing a patient record should be logged by the backend (UI triggers the access).
+      </div>
+    </form>
+
+    {% if patient %}
+      <div class="card p-3 mt-2">
+        <h6 class="mb-3">Patient Details</h6>
+
+        <div class="row">
+          <div class="col-md-6"><strong>ID:</strong> {{ patient.id }}</div>
+          <div class="col-md-6"><strong>Name:</strong> {{ patient.name }}</div>
+        </div>
+        <div class="row mt-2">
+          <div class="col-md-6"><strong>Birth Date:</strong> {{ patient.birth_date }}</div>
+          <div class="col-md-6"><strong>Blood Type:</strong> {{ patient.blood_type }}</div>
+        </div>
+        <div class="row mt-2">
+          <div class="col-md-6"><strong>Height:</strong> {{ patient.height }}</div>
+          <div class="col-md-6"><strong>Weight:</strong> {{ patient.weight }}</div>
+        </div>
+        <div class="row mt-2">
+          <div class="col-12"><strong>Notes:</strong> {{ patient.notes }}</div>
+        </div>
+      </div>
+
+      <hr class="my-4">
+
+    
+      <!-- Update Patient -->
+    
+      <h5 class="mb-2"> Update / Add Patient Data</h5>
+      <form method="POST" action="/doctor/update-patient">
+        <input type="hidden" name="patient_id" value="{{ patient.id }}">
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Height (cm)</label>
+            <input class="form-control" name="height" type="number" value="{{ patient.height }}">
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Weight (kg)</label>
+            <input class="form-control" name="weight" type="number" value="{{ patient.weight }}">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Blood Type</label>
+            <input class="form-control" name="blood_type" value="{{ patient.blood_type }}">
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Notes</label>
+            <input class="form-control" name="notes" value="{{ patient.notes }}">
+          </div>
+        </div>
+
+        <button class="btn btn-primary w-100">Save Updates</button>
+        <div class="small text-muted mt-2">
+          Updates should be allowed for doctors; access/update actions should be logged by backend services.
+        </div>
+      </form>
+    {% endif %}
+
+    {% if error %}
+      <div class="alert alert-danger mt-3">
+        {{ error }}
+      </div>
+    {% endif %}
+
+    {% if success %}
+      <div class="alert alert-success mt-3">
+        {{ success }}
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

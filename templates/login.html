@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container col-md-5 mx-auto mt-5">
+  <div class="card p-4 shadow-sm">
+    <h2 class="mb-4 text-center">Login</h2>
+
+    <form method="POST">
+
+      <!-- Role selection>
+      <div class="mb-3">
+        <label for="role" class="form-label">Login as</label>
+        <select class="form-select" id="role" name="role" required>
+          <option value="doctor">Doctor</option>
+          <option value="patient">Patient</option>
+        </select>
+      </div>
+
+      <!-- Username -->
+      <div class="mb-3">
+        <label for="username" class="form-label">Username</label>
+        <input
+          type="text"
+          class="form-control"
+          id="username"
+          name="username"
+          required
+        >
+      </div>
+
+      <!-- Password / Token -->
+      <div class="mb-3">
+        <label for="password" class="form-label">
+          Password / Patient Token
+        </label>
+        <input
+          type="password"
+          class="form-control"
+          id="password"
+          name="password"
+          required
+        >
+      </div>
+
+      <div class="d-grid">
+        <button type="submit" class="btn btn-primary">
+          Login
+        </button>
+      </div>
+
+    </form>
+
+    <div class="text-center mt-3">
+      <small class="text-muted">
+        Doctors can create patients and generate access tokens.
+      </small>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

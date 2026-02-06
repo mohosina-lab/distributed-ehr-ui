@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container col-md-7 mx-auto mt-4">
+  <div class="card p-4 shadow-sm">
+    <h2 class="mb-3">Patient Portal</h2>
+    <p class="text-muted">
+      View your record and update non-critical information only.
+    </p>
+
+    {% if error %}
+      <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    {% if success %}
+      <div class="alert alert-success">{{ success }}</div>
+    {% endif %}
+
+    <!-- If patient is not “logged in”, show a simple access form -->
+    {% if not patient_id %}
+      <form method="POST" action="/patient/access">
+        <div class="mb-3">
+          <label class="form-label">Your Patient ID</label>
+          <input class="form-control" name="patient_id" placeholder="e.g., p001" required>
+          <div class="form-text">For now we use Patient ID (later this comes from session after login).</div>
+        </div>
+        <button class="btn btn-primary w-100">Access My Record</button>
+      </form>
+    {% else %}
+
+      <!-- Patient details (read-only important fields) -->
+      {% if patient %}
+        <div class="card p-3 mt-2">
+          <h6 class="mb-3">My Details</h6>
+
+          <div class="row">
+            <div class="col-md-6"><strong>ID:</strong> {{ patient.id }}</div>
+            <div class="col-md-6"><strong>Name:</strong> {{ patient.name }}</div>
+          </div>
+          <div class="row mt-2">
+            <div class="col-md-6"><strong>Birth Date:</strong> {{ patient.birth_date }}</div>
+            <div class="col-md-6"><strong>Blood Type:</strong> {{ patient.blood_type }}</div>
+          </div>
+          <div class="row mt-2">
+            <div class="col-md-6"><strong>Height:</strong> {{ patient.height }}</div>
+            <div class="col-md-6"><strong>Weight:</strong> {{ patient.weight }}</div>
+          </div>
+
+          <div class="small text-muted mt-3">
+            Medical fields above are read-only for patients.
+          </div>
+        </div>
+      {% endif %}
+
+      <hr class="my-4">
+
+      <!-- Non-crucial update -->
+      <h5 class="mb-2">Update Non-Critical Info</h5>
+      <form method="POST" action="/patient/update">
+        <input type="hidden" name="patient_id" value="{{ patient_id }}">
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Notes (non-clinical)</label>
+            <input class="form-control" name="notes" value="{{ patient.notes if patient else '' }}" placeholder="e.g., preferred contact time">
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Contact Email</label>
+            <input class="form-control" name="email" value="{{ patient.email if patient else '' }}" placeholder="name@example.com">
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Address</label>
+          <input class="form-control" name="address" value="{{ patient.address if patient else '' }}" placeholder="Street, City">
+        </div>
+
+        <button class="btn btn-primary w-100">Save My Updates</button>
+        <div class="small text-muted mt-2">
+          Patients can only update non-critical fields. Attempts to change medical fields should be blocked (backend policy).
+        </div>
+      </form>
+
+      <div class="text-center mt-3">
+        <a class="btn btn-outline-secondary btn-sm" href="/patient/logout">Leave Patient Portal</a>
+      </div>
+
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
