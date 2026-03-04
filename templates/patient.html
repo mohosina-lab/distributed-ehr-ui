@@ -1,91 +1,232 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container col-md-7 mx-auto mt-4">
-  <div class="card p-4 shadow-sm">
-    <h2 class="mb-3">Patient Portal</h2>
-    <p class="text-muted">
-      View your record and update non-critical information only.
-    </p>
+<div class="container col-md-9 mx-auto mt-4">
 
-    {% if error %}
-      <div class="alert alert-danger">{{ error }}</div>
-    {% endif %}
+  {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+  {% endif %}
+  {% if success %}
+    <div class="alert alert-success">{{ success }}</div>
+  {% endif %}
 
-    {% if success %}
-      <div class="alert alert-success">{{ success }}</div>
-    {% endif %}
+  {% if patient %}
 
-    <!-- If patient is not “logged in”, show a simple access form -->
-    {% if not patient_id %}
-      <form method="POST" action="/patient/access">
-        <div class="mb-3">
-          <label class="form-label">Your Patient ID</label>
-          <input class="form-control" name="patient_id" placeholder="e.g., p001" required>
-          <div class="form-text">For now we use Patient ID (later this comes from session after login).</div>
+  <!-- ── Patient Record card ── -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">My Medical Record</h5>
+      <span class="badge bg-secondary">v{{ patient.version }}</span>
+    </div>
+    <div class="card-body">
+
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <p class="mb-1 text-muted small">Patient ID</p>
+          <p class="fw-semibold">{{ patient.identity.patientId }}</p>
         </div>
-        <button class="btn btn-primary w-100">Access My Record</button>
-      </form>
-    {% else %}
-
-      <!-- Patient details (read-only important fields) -->
-      {% if patient %}
-        <div class="card p-3 mt-2">
-          <h6 class="mb-3">My Details</h6>
-
-          <div class="row">
-            <div class="col-md-6"><strong>ID:</strong> {{ patient.id }}</div>
-            <div class="col-md-6"><strong>Name:</strong> {{ patient.name }}</div>
-          </div>
-          <div class="row mt-2">
-            <div class="col-md-6"><strong>Birth Date:</strong> {{ patient.birth_date }}</div>
-            <div class="col-md-6"><strong>Blood Type:</strong> {{ patient.blood_type }}</div>
-          </div>
-          <div class="row mt-2">
-            <div class="col-md-6"><strong>Height:</strong> {{ patient.height }}</div>
-            <div class="col-md-6"><strong>Weight:</strong> {{ patient.weight }}</div>
-          </div>
-
-          <div class="small text-muted mt-3">
-            Medical fields above are read-only for patients.
-          </div>
+        {% if patient.identity.mrn %}
+        <div class="col-md-6">
+          <p class="mb-1 text-muted small">MRN</p>
+          <p class="fw-semibold">{{ patient.identity.mrn }}</p>
         </div>
-      {% endif %}
-
-      <hr class="my-4">
-
-      <!-- Non-crucial update -->
-      <h5 class="mb-2">Update Non-Critical Info</h5>
-      <form method="POST" action="/patient/update">
-        <input type="hidden" name="patient_id" value="{{ patient_id }}">
-
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Notes (non-clinical)</label>
-            <input class="form-control" name="notes" value="{{ patient.notes if patient else '' }}" placeholder="e.g., preferred contact time">
-          </div>
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Contact Email</label>
-            <input class="form-control" name="email" value="{{ patient.email if patient else '' }}" placeholder="name@example.com">
-          </div>
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Address</label>
-          <input class="form-control" name="address" value="{{ patient.address if patient else '' }}" placeholder="Street, City">
-        </div>
-
-        <button class="btn btn-primary w-100">Save My Updates</button>
-        <div class="small text-muted mt-2">
-          Patients can only update non-critical fields. Attempts to change medical fields should be blocked (backend policy).
-        </div>
-      </form>
-
-      <div class="text-center mt-3">
-        <a class="btn btn-outline-secondary btn-sm" href="/patient/logout">Leave Patient Portal</a>
+        {% endif %}
       </div>
 
-    {% endif %}
+      <hr>
+
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <p class="mb-1 text-muted small">Given Name</p>
+          <p class="fw-semibold">{{ patient.demographics.name.given }}</p>
+        </div>
+        <div class="col-md-4">
+          <p class="mb-1 text-muted small">Family Name</p>
+          <p class="fw-semibold">{{ patient.demographics.name.family }}</p>
+        </div>
+        <div class="col-md-4">
+          <p class="mb-1 text-muted small">Date of Birth</p>
+          <p class="fw-semibold">{{ patient.demographics.dob }}</p>
+        </div>
+      </div>
+
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <p class="mb-1 text-muted small">Sex at Birth</p>
+          <p class="fw-semibold">{{ patient.demographics.sexAtBirth or '—' }}</p>
+        </div>
+        <div class="col-md-4">
+          <p class="mb-1 text-muted small">Gender Identity</p>
+          <p class="fw-semibold">{{ patient.demographics.genderIdentity or '—' }}</p>
+        </div>
+        <div class="col-md-4">
+          <p class="mb-1 text-muted small">Deceased</p>
+          <p class="fw-semibold">{{ 'Yes' if patient.demographics.deceased else 'No' }}</p>
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <p class="mb-1 text-muted small">Phone</p>
+          <p class="fw-semibold" id="displayPhone">{{ patient.contacts.phone if patient.contacts and patient.contacts.phone else '—' }}</p>
+        </div>
+        <div class="col-md-4">
+          <p class="mb-1 text-muted small">Email</p>
+          <p class="fw-semibold" id="displayEmail">{{ patient.contacts.email if patient.contacts and patient.contacts.email else '—' }}</p>
+        </div>
+        <div class="col-md-4">
+          <p class="mb-1 text-muted small">Address</p>
+          <p class="fw-semibold" id="displayAddress">{{ patient.contacts.address if patient.contacts and patient.contacts.address else '—' }}</p>
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="row mb-2">
+        <div class="col-md-4">
+          <p class="mb-1 text-muted small">Source Hospital</p>
+          <p class="fw-semibold">{{ patient.meta.sourceHospital }}</p>
+        </div>
+        <div class="col-md-4">
+          <p class="mb-1 text-muted small">Last Updated</p>
+          <p class="fw-semibold">{{ patient.lastUpdated }}</p>
+        </div>
+        <div class="col-md-4">
+          <p class="mb-1 text-muted small">Created At</p>
+          <p class="fw-semibold">{{ patient.created_at }}</p>
+        </div>
+      </div>
+
+      <hr>
+      <h6 class="mb-2">Conditions</h6>
+      {% if patient.conditions %}
+      <ul class="list-group list-group-flush mb-1">
+        {% for cond in patient.conditions %}
+        <li class="list-group-item px-0">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <strong>{{ cond.description }}</strong>
+              <span class="badge bg-{{ 'success' if cond.status == 'active' else 'secondary' }} ms-2">{{ cond.status }}</span>
+              {% if cond.code %}
+                <span class="badge bg-light text-dark border ms-1">{{ cond.system or '' }} {{ cond.code }}</span>
+              {% endif %}
+              {% if cond.encounterId %}
+                <span class="text-muted small ms-2">Enc: {{ cond.encounterId }}</span>
+              {% endif %}
+            </div>
+            <div class="text-muted small text-end">
+              {% if cond.onset %}<div>Onset: {{ cond.onset }}</div>{% endif %}
+              <div>Recorded: {{ cond.recordedAt[:10] if cond.recordedAt else '—' }}</div>
+            </div>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+        <p class="text-muted small">No conditions recorded.</p>
+      {% endif %}
+
+    </div>
   </div>
+
+  <!-- ── Update Contact Info card ── -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">Update My Contact Info</h5>
+    </div>
+    <div class="card-body">
+      <div id="updateAlert" class="mb-3" style="display:none;"></div>
+      <form id="contactUpdateForm">
+
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Phone</label>
+            <input class="form-control" id="inputPhone" name="phone"
+                   value="{{ patient.contacts.phone if patient.contacts and patient.contacts.phone else '' }}"
+                   placeholder="+358...">
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Email</label>
+            <input class="form-control" id="inputEmail" name="email"
+                   value="{{ patient.contacts.email if patient.contacts and patient.contacts.email else '' }}"
+                   placeholder="name@example.com">
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Address</label>
+            <input class="form-control" id="inputAddress" name="address"
+                   value="{{ patient.contacts.address if patient.contacts and patient.contacts.address else '' }}"
+                   placeholder="City, Country">
+          </div>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+          <button type="submit" class="btn btn-primary" id="saveBtn">Save My Updates</button>
+          <small class="text-muted">Only contact fields can be updated by patients.</small>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+  document.getElementById('contactUpdateForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    var phone   = document.getElementById('inputPhone').value.trim();
+    var email   = document.getElementById('inputEmail').value.trim();
+    var address = document.getElementById('inputAddress').value.trim();
+
+    var body = new FormData();
+    if (phone)   body.append('phone',   phone);
+    if (email)   body.append('email',   email);
+    if (address) body.append('address', address);
+
+    var btn   = document.getElementById('saveBtn');
+    var alert = document.getElementById('updateAlert');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+    alert.style.display = 'none';
+
+    fetch('/patient/update', { method: 'POST', body: body })
+      .then(function(res) {
+        return res.json().then(function(data) {
+          return { ok: res.ok, data: data };
+        });
+      })
+      .then(function(result) {
+        if (result.ok && result.data.success) {
+          // Update the displayed values in the record card in-place
+          document.getElementById('displayPhone').textContent   = phone   || '—';
+          document.getElementById('displayEmail').textContent   = email   || '—';
+          document.getElementById('displayAddress').textContent = address || '—';
+
+          alert.className = 'alert alert-success mb-3';
+          alert.textContent = 'Contact info saved successfully.';
+        } else {
+          throw new Error(result.data.error || 'Unknown error');
+        }
+      })
+      .catch(function(err) {
+        alert.className = 'alert alert-danger mb-3';
+        alert.textContent = 'Update failed: ' + err.message;
+      })
+      .finally(function() {
+        alert.style.display = '';
+        btn.disabled = false;
+        btn.textContent = 'Save My Updates';
+      });
+  });
+  </script>
+
+  <div class="text-end">
+    <a class="btn btn-outline-secondary btn-sm" href="/logout">Log Out</a>
+  </div>
+
+  {% else %}
+    {% if not error %}
+      <div class="alert alert-warning">Your patient record could not be found. Please contact your doctor.</div>
+    {% endif %}
+  {% endif %}
+
 </div>
 {% endblock %}

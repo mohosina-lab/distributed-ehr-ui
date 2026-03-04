@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container col-md-9 mx-auto mt-4">
+
+  <!-- Back button -->
+  <a href="/doctor" class="btn btn-outline-secondary btn-sm mb-3">← Back to Doctor Portal</a>
+
+  {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+  {% endif %}
+  {% if success %}
+    <div class="alert alert-success">{{ success }}</div>
+  {% endif %}
+
+  {% if patient %}
+
+  <!-- ── Patient Details card ── -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Patient Record</h5>
+      <span class="badge bg-secondary" id="versionBadge">v{{ patient.version }}</span>
+    </div>
+    <div class="card-body">
+
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <p class="mb-1 text-muted small">UUID</p>
+          <p class="fw-semibold">{{ patient.id }}</p>
+        </div>
+        <div class="col-md-6">
+          <p class="mb-1 text-muted small">Patient ID</p>
+          <p class="fw-semibold">{{ patient.identity.patientId }}</p>
+        </div>
+      </div>
+
+      {% if patient.identity.nationalId %}
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <p class="mb-1 text-muted small">National ID</p>
+          <p class="fw-semibold">{{ patient.identity.nationalId }}</p>
+        </div>
+        {% if patient.identity.mrn %}
+        <div class="col-md-6">
+          <p class="mb-1 text-muted small">MRN</p>
+          <p class="fw-semibold">{{ patient.identity.mrn }}</p>
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <hr>
+
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <p class="mb-1 text-muted small">Given Name</p>
+          <p class="fw-semibold">{{ patient.demographics.name.given }}</p>
+        </div>
+        <div class="col-md-4">
+          <p class="mb-1 text-muted small">Family Name</p>
+          <p class="fw-semibold">{{ patient.demographics.name.family }}</p>
+        </div>
+        <div class="col-md-4">
+          <p class="mb-1 text-muted small">Date of Birth</p>
+          <p class="fw-semibold">{{ patient.demographics.dob }}</p>
+        </div>
+      </div>
+
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <p class="mb-1 text-muted small">Sex at Birth</p>
+          <p class="fw-semibold">{{ patient.demographics.sexAtBirth or '—' }}</p>
+        </div>
+        <div class="col-md-4">
+          <p class="mb-1 text-muted small">Gender Identity</p>
+          <p class="fw-semibold">{{ patient.demographics.genderIdentity or '—' }}</p>
+        </div>
+        <div class="col-md-4">
+          <p class="mb-1 text-muted small">Deceased</p>
+          <p class="fw-semibold">{{ 'Yes' if patient.demographics.deceased else 'No' }}</p>
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <p class="mb-1 text-muted small">Phone</p>
+          <p class="fw-semibold" id="displayPhone">{{ patient.contacts.phone if patient.contacts and patient.contacts.phone else '—' }}</p>
+        </div>
+        <div class="col-md-4">
+          <p class="mb-1 text-muted small">Email</p>
+          <p class="fw-semibold" id="displayEmail">{{ patient.contacts.email if patient.contacts and patient.contacts.email else '—' }}</p>
+        </div>
+        <div class="col-md-4">
+          <p class="mb-1 text-muted small">Address</p>
+          <p class="fw-semibold" id="displayAddress">{{ patient.contacts.address if patient.contacts and patient.contacts.address else '—' }}</p>
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="row mb-2">
+        <div class="col-md-4">
+          <p class="mb-1 text-muted small">Source Hospital</p>
+          <p class="fw-semibold">{{ patient.meta.sourceHospital }}</p>
+        </div>
+        <div class="col-md-4">
+          <p class="mb-1 text-muted small">Last Updated</p>
+          <p class="fw-semibold">{{ patient.lastUpdated }}</p>
+        </div>
+        <div class="col-md-4">
+          <p class="mb-1 text-muted small">Created At</p>
+          <p class="fw-semibold">{{ patient.created_at }}</p>
+        </div>
+      </div>
+
+      <!-- ── Conditions (read-only view) ── -->
+      <hr>
+      <h6 class="mb-2">Conditions</h6>
+      <div id="conditionsReadOnly">
+      {% if patient.conditions %}
+      <ul class="list-group list-group-flush mb-1">
+        {% for cond in patient.conditions %}
+        <li class="list-group-item px-0">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <strong>{{ cond.description }}</strong>
+              <span class="badge bg-{{ 'success' if cond.status == 'active' else 'secondary' }} ms-2">{{ cond.status }}</span>
+              {% if cond.code %}
+                <span class="badge bg-light text-dark border ms-1">{{ cond.system or '' }} {{ cond.code }}</span>
+              {% endif %}
+              {% if cond.encounterId %}
+                <span class="text-muted small ms-2">Enc: {{ cond.encounterId }}</span>
+              {% endif %}
+            </div>
+            <div class="text-muted small text-end">
+              {% if cond.onset %}<div>Onset: {{ cond.onset }}</div>{% endif %}
+              <div>Recorded: {{ cond.recordedAt[:10] if cond.recordedAt else '—' }}</div>
+            </div>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+        <p class="text-muted small">No conditions recorded.</p>
+      {% endif %}
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Update Contact Info + Conditions card ── -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">Update Patient Data</h5>
+    </div>
+    <div class="card-body">
+      <form id="updateForm">
+
+        <!-- Hidden UUID — used only for redirect back to this page after submit -->
+        <input type="hidden" name="patient_uuid" value="{{ patient.id }}">
+        <!-- Hidden field carrying the full conditions list as JSON -->
+        <input type="hidden" name="conditions_json" id="conditionsJson">
+
+        <!-- Contact Info -->
+        <h6 class="mb-3 text-muted text-uppercase" style="font-size:.75rem;letter-spacing:.05em;">Contact Information</h6>
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Phone</label>
+            <input class="form-control" id="inputPhone" name="phone"
+                   value="{{ patient.contacts.phone if patient.contacts and patient.contacts.phone else '' }}"
+                   placeholder="+358...">
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Email</label>
+            <input class="form-control" id="inputEmail" name="email"
+                   value="{{ patient.contacts.email if patient.contacts and patient.contacts.email else '' }}"
+                   placeholder="name@example.com">
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Address</label>
+            <input class="form-control" id="inputAddress" name="address"
+                   value="{{ patient.contacts.address if patient.contacts and patient.contacts.address else '' }}"
+                   placeholder="City, Country">
+          </div>
+        </div>
+
+        <hr>
+
+        <!-- Conditions editor -->
+        <h6 class="mb-3 text-muted text-uppercase" style="font-size:.75rem;letter-spacing:.05em;">Conditions</h6>
+
+        <!-- Existing conditions table (editable / removable) -->
+        <div class="table-responsive mb-3">
+          <table class="table table-sm table-bordered align-middle" id="conditionsTable">
+            <thead class="table-light">
+              <tr>
+                <th>Description <span class="text-danger">*</span></th>
+                <th>Code</th>
+                <th>System</th>
+                <th>Status</th>
+                <th>Onset</th>
+                <th>Encounter ID</th>
+                <th>Recorded At</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="conditionsBody">
+              <!-- Rows injected by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Add new condition row -->
+        <div class="card bg-light border mb-3 p-3">
+          <h6 class="mb-3 small fw-semibold">Add New Condition</h6>
+          <div class="row g-2">
+            <div class="col-md-3">
+              <input class="form-control form-control-sm" id="newDesc" placeholder="Description *">
+            </div>
+            <div class="col-md-2">
+              <input class="form-control form-control-sm" id="newCode" placeholder="Code (e.g. E11.9)">
+            </div>
+            <div class="col-md-2">
+              <input class="form-control form-control-sm" id="newSystem" placeholder="System (e.g. ICD-10)">
+            </div>
+            <div class="col-md-1">
+              <select class="form-select form-select-sm" id="newStatus">
+                <option value="active">active</option>
+                <option value="resolved">resolved</option>
+                <option value="inactive">inactive</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <input type="date" class="form-control form-control-sm" id="newOnset" placeholder="Onset">
+            </div>
+            <div class="col-md-2">
+              <input class="form-control form-control-sm" id="newEncounterId" placeholder="Encounter ID">
+            </div>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="addConditionBtn">+ Add Condition</button>
+        </div>
+
+        <div id="updateAlert" class="mt-3" style="display:none;"></div>
+        <button class="btn btn-primary mt-3" type="submit" id="saveBtn">Save All Updates</button>
+      </form>
+    </div>
+  </div>
+
+  {% else %}
+    <div class="alert alert-warning">Patient not found.</div>
+  {% endif %}
+
+</div>
+
+<script>
+var conditions = {{ (patient.conditions | tojson) if patient and patient.conditions else '[]' }};
+var patientId  = {{ (patient.identity.patientId | tojson) if patient else '""' }};
+
+function isoNow() { return new Date().toISOString(); }
+
+function ensureIsoDatetime(val) {
+  if (!val) return isoNow();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val + 'T00:00:00Z';
+  return val;
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ── Re-render the editable conditions table ── */
+function renderRows() {
+  var tbody = document.getElementById('conditionsBody');
+  tbody.innerHTML = '';
+  if (conditions.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="text-muted text-center small">No conditions.</td></tr>';
+    return;
+  }
+  conditions.forEach(function(c, i) {
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td><input class="form-control form-control-sm" value="' + escHtml(c.description) + '" onchange="conditions[' + i + '].description=this.value"></td>' +
+      '<td><input class="form-control form-control-sm" value="' + escHtml(c.code || '') + '" onchange="conditions[' + i + '].code=this.value||null"></td>' +
+      '<td><input class="form-control form-control-sm" value="' + escHtml(c.system || '') + '" onchange="conditions[' + i + '].system=this.value||null"></td>' +
+      '<td><select class="form-select form-select-sm" onchange="conditions[' + i + '].status=this.value">' +
+        ['active','resolved','inactive'].map(function(s){ return '<option value="'+s+'"'+(c.status===s?' selected':'')+'>'+s+'</option>'; }).join('') +
+      '</select></td>' +
+      '<td><input type="date" class="form-control form-control-sm" value="' + escHtml((c.onset||'').substring(0,10)) + '" onchange="conditions[' + i + '].onset=this.value||null"></td>' +
+      '<td><input class="form-control form-control-sm" value="' + escHtml(c.encounterId || '') + '" onchange="conditions[' + i + '].encounterId=this.value||null"></td>' +
+      '<td><span class="text-muted small">' + escHtml((c.recordedAt||'').substring(0,10)) + '</span></td>' +
+      '<td><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeCondition(' + i + ')">✕</button></td>';
+    tbody.appendChild(tr);
+  });
+}
+
+function removeCondition(i) {
+  conditions.splice(i, 1);
+  renderRows();
+}
+
+document.getElementById('addConditionBtn').addEventListener('click', function() {
+  var desc = document.getElementById('newDesc').value.trim();
+  if (!desc) { alert('Description is required'); return; }
+  conditions.push({
+    description: desc,
+    code:        document.getElementById('newCode').value.trim() || null,
+    system:      document.getElementById('newSystem').value.trim() || null,
+    status:      document.getElementById('newStatus').value,
+    onset:       document.getElementById('newOnset').value || null,
+    encounterId: document.getElementById('newEncounterId').value.trim() || null,
+    recordedAt:  isoNow()
+  });
+  ['newDesc','newCode','newSystem','newOnset','newEncounterId'].forEach(function(id){ document.getElementById(id).value=''; });
+  document.getElementById('newStatus').value = 'active';
+  renderRows();
+});
+
+/* ── AJAX submit ── */
+document.getElementById('updateForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  // Ensure valid recordedAt on every condition
+  conditions = conditions.map(function(c) {
+    return Object.assign({}, c, { recordedAt: ensureIsoDatetime(c.recordedAt) });
+  });
+
+  // Write directly into the hidden input BEFORE building FormData
+  document.getElementById('conditionsJson').value = JSON.stringify(conditions);
+
+  var formData = new FormData(this);
+
+  var btn     = document.getElementById('saveBtn');
+  var alertEl = document.getElementById('updateAlert');
+  btn.disabled    = true;
+  btn.textContent = 'Saving…';
+  alertEl.style.display = 'none';
+
+  fetch('/doctor/update-patient/' + patientId, { method: 'POST', body: formData })
+    .then(function(res) {
+      return res.json().then(function(data) { return { ok: res.ok, data: data }; });
+    })
+    .then(function(result) {
+      if (result.ok && result.data.success) {
+        // Navigate to the same page with a cache-busting param so the browser
+        // always fetches fresh data from the server
+        window.location.href = window.location.pathname + '?t=' + Date.now();
+      } else {
+        throw new Error((result.data && result.data.error) || 'Unknown error');
+      }
+    })
+    .catch(function(err) {
+      alertEl.className     = 'alert alert-danger mt-3';
+      alertEl.textContent   = 'Update failed: ' + err.message;
+      alertEl.style.display = '';
+    })
+    .finally(function() {
+      btn.disabled    = false;
+      btn.textContent = 'Save All Updates';
+    });
+});
+
+renderRows();
+</script>
+{% endblock %}

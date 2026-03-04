@@ -1,150 +1,235 @@
 {% extends "base.html" %}
 
+{% block head %}
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/2.0.8/css/dataTables.bootstrap5.min.css">
+{% endblock %}
+
 {% block content %}
-<div class="container col-md-7 mx-auto mt-4">
+<div class="container col-md-11 mx-auto mt-4">
   <div class="card p-4 shadow-sm">
     <h2 class="mb-3">Doctor Portal</h2>
     <p class="text-muted">
-      Doctors can create patients, view any patient record, and update patient data. Patient access tokens are generated on creation.
+      Doctors can create patients, view any patient record, and update patient data.
     </p>
 
+    <!-- ── All Patients DataTable ── -->
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <h5 class="mb-0">All Patients</h5>
+      <button id="refreshTableBtn" class="btn btn-outline-secondary btn-sm">↻ Refresh Table</button>
+    </div>
+    <div class="table-responsive">
+      <table id="patientsTable" class="table table-striped table-hover table-bordered align-middle w-100">
+        <thead class="table-dark">
+          <tr>
+            <th>Patient ID</th>
+            <th>Given Name</th>
+            <th>Family Name</th>
+            <th>Date of Birth</th>
+            <th>Sex</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th>Source Hospital</th>
+            <th>Version</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <hr class="my-4">
+
     <!-- Create Patient -->
-    
-    <h5 class="mt-2 mb-2"> Create New Patient</h5>
+    <h5 class="mt-2 mb-2">Create New Patient</h5>
     <form method="POST" action="/doctor/create-patient">
+      <!-- Patient ID is auto-generated from the other fields -->
+      <input type="hidden" name="patient_id" id="patientIdHidden">
+
       <div class="row">
         <div class="col-md-6 mb-3">
-          <label class="form-label">National ID</label>
-          <input class="form-control" name="national_id" placeholder="e.g., P022601" required>
+          <label class="form-label">National ID <small class="text-muted">(min 6 digits)</small></label>
+          <input class="form-control" name="national_id" id="nationalId"
+                 placeholder="e.g., FIN-123456" minlength="6" required>
         </div>
         <div class="col-md-6 mb-3">
-          <label class="form-label">Full Name</label>
-          <input class="form-control" name="name" placeholder="e.g., Mohosina" required>
+          <label class="form-label">Full Name <small class="text-muted">(Given Family)</small></label>
+          <input class="form-control" name="name" placeholder="e.g., Jane Doe" required>
         </div>
       </div>
 
       <div class="row">
-        <div class="col-md-6 mb-3">
-          <label class="form-label">Birth Date</label>
-          <input class="form-control" name="birth_date" placeholder="YYYY-MM-DD" required>
+        <div class="col-md-4 mb-3">
+          <label class="form-label">Date of Birth</label>
+          <input type="date" class="form-control" name="birth_date" id="birthDate" required>
         </div>
+        <div class="col-md-4 mb-3">
+          <label class="form-label">Sex at Birth</label>
+          <select class="form-select" name="sex" required>
+            <option value="" disabled selected>Select…</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+        </div>
+        <div class="col-md-4 mb-3">
+          <label class="form-label">Source Hospital</label>
+          <input class="form-control" name="source_hospital" id="sourceHospital"
+                 placeholder="e.g., HOSP-A" value="hospital-h1">
+        </div>
+      </div>
+
+      <!-- Auto-generated Patient ID preview -->
+      <div class="row">
         <div class="col-md-6 mb-3">
-          <label class="form-label">Blood Type</label>
-          <input class="form-control" name="blood_type" placeholder="e.g., A+">
+          <label class="form-label text-muted">Auto-generated Patient ID</label>
+          <input type="text" class="form-control bg-light text-muted" id="patientIdPreview"
+                 placeholder="Fill in the fields above…" readonly tabindex="-1">
+        </div>
+        <div class="col-md-6 mb-3 d-flex align-items-end">
+          <div class="d-flex align-items-center gap-2">
+            <input class="form-check-input mt-0" type="checkbox" name="deceased" id="deceasedCheck" value="true">
+            <label class="form-check-label" for="deceasedCheck">Patient is deceased</label>
+          </div>
         </div>
       </div>
 
       <div class="row">
-        <div class="col-md-6 mb-3">
-          <label class="form-label">Height (cm)</label>
-          <input class="form-control" name="height" type="number">
+        <div class="col-md-4 mb-3">
+          <label class="form-label">Phone</label>
+          <input class="form-control" name="phone" placeholder="+358...">
         </div>
-        <div class="col-md-6 mb-3">
-          <label class="form-label">Weight (kg)</label>
-          <input class="form-control" name="weight" type="number">
+        <div class="col-md-4 mb-3">
+          <label class="form-label">Email</label>
+          <input class="form-control" name="email" placeholder="patient@example.com">
+        </div>
+        <div class="col-md-4 mb-3">
+          <label class="form-label">Address</label>
+          <input class="form-control" name="address" placeholder="City, Country">
         </div>
       </div>
 
       <button class="btn btn-primary w-100">Create Patient</button>
     </form>
 
-    {% if created_patient %}
-      <div class="alert alert-success mt-3">
-        <div><strong>Patient created</strong></div>
-        <div><strong>ID:</strong> {{ created_patient.id }}</div>
-        <div><strong>Name:</strong> {{ created_patient.name }}</div>
-        <div><strong>Token:</strong> <code>{{ created_patient.token }}</code></div>
-        <div class="small text-muted mt-2">Give this token to the patient for login.</div>
-      </div>
-    {% endif %}
-
-    <hr class="my-4">
-
-   
-    <!-- View Patient -->
-    <h5 class="mb-2">View Patient Record</h5>
-    <form method="GET" action="/doctor">
-      <div class="input-group mb-3">
-        <span class="input-group-text">Patient ID</span>
-        <input class="form-control" name="view_patient_id" placeholder="e.g., p001" value="{{ view_patient_id or '' }}">
-        <button class="btn btn-outline-primary" type="submit">Load</button>
-      </div>
-      <div class="small text-muted">
-        Viewing a patient record should be logged by the backend (UI triggers the access).
-      </div>
-    </form>
-
-    {% if patient %}
-      <div class="card p-3 mt-2">
-        <h6 class="mb-3">Patient Details</h6>
-
-        <div class="row">
-          <div class="col-md-6"><strong>ID:</strong> {{ patient.id }}</div>
-          <div class="col-md-6"><strong>Name:</strong> {{ patient.name }}</div>
-        </div>
-        <div class="row mt-2">
-          <div class="col-md-6"><strong>Birth Date:</strong> {{ patient.birth_date }}</div>
-          <div class="col-md-6"><strong>Blood Type:</strong> {{ patient.blood_type }}</div>
-        </div>
-        <div class="row mt-2">
-          <div class="col-md-6"><strong>Height:</strong> {{ patient.height }}</div>
-          <div class="col-md-6"><strong>Weight:</strong> {{ patient.weight }}</div>
-        </div>
-        <div class="row mt-2">
-          <div class="col-12"><strong>Notes:</strong> {{ patient.notes }}</div>
-        </div>
-      </div>
-
-      <hr class="my-4">
-
-    
-      <!-- Update Patient -->
-    
-      <h5 class="mb-2"> Update / Add Patient Data</h5>
-      <form method="POST" action="/doctor/update-patient">
-        <input type="hidden" name="patient_id" value="{{ patient.id }}">
-
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Height (cm)</label>
-            <input class="form-control" name="height" type="number" value="{{ patient.height }}">
-          </div>
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Weight (kg)</label>
-            <input class="form-control" name="weight" type="number" value="{{ patient.weight }}">
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Blood Type</label>
-            <input class="form-control" name="blood_type" value="{{ patient.blood_type }}">
-          </div>
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Notes</label>
-            <input class="form-control" name="notes" value="{{ patient.notes }}">
-          </div>
-        </div>
-
-        <button class="btn btn-primary w-100">Save Updates</button>
-        <div class="small text-muted mt-2">
-          Updates should be allowed for doctors; access/update actions should be logged by backend services.
-        </div>
-      </form>
-    {% endif %}
-
     {% if error %}
-      <div class="alert alert-danger mt-3">
-        {{ error }}
-      </div>
+      <div class="alert alert-danger mt-3">{{ error }}</div>
     {% endif %}
-
     {% if success %}
-      <div class="alert alert-success mt-3">
-        {{ success }}
-      </div>
+      <div class="alert alert-success mt-3">{{ success }}</div>
     {% endif %}
 
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/2.0.8/js/dataTables.bootstrap5.min.js"></script>
+<script>
+$(document).ready(function () {
+
+  // ── Patient ID auto-generator ──────────────────────────────────────────────
+  function generatePatientId() {
+    var nationalId   = $('#nationalId').val().trim();
+    var birthDate    = $('#birthDate').val();          // "YYYY-MM-DD"
+    var sourceHosp   = $('#sourceHospital').val().trim().toUpperCase();
+
+    // Need all three fields and nationalId ≥ 6 chars to generate
+    if (!nationalId || nationalId.length < 6 || !birthDate || !sourceHosp) {
+      $('#patientIdPreview').val('');
+      $('#patientIdHidden').val('');
+      return;
+    }
+
+    var year      = new Date().getFullYear();
+    // Strip non-alphanumeric from dob → "19900115"
+    var dobPart   = birthDate.replace(/-/g, '');
+    // Last 3 characters of nationalId (digits or letters)
+    var last3     = nationalId.replace(/[^a-zA-Z0-9]/g, '').slice(-3).toUpperCase();
+
+    var pid = 'P-' + year + '-' + sourceHosp + '-' + dobPart + '-' + last3;
+
+    $('#patientIdPreview').val(pid);
+    $('#patientIdHidden').val(pid);
+  }
+
+  $('#nationalId, #birthDate, #sourceHospital').on('input change', generatePatientId);
+
+  // Block form submit if patient ID not yet generated
+  $('form[action="/doctor/create-patient"]').on('submit', function (e) {
+    if (!$('#patientIdHidden').val()) {
+      e.preventDefault();
+      alert('Please fill in National ID (min 6 chars), Date of Birth and Source Hospital to generate a Patient ID before submitting.');
+    }
+  });
+  // ──────────────────────────────────────────────────────────────────────────
+
+  var table = $('#patientsTable').DataTable({
+    ajax: {
+      url: '/doctor/patients',
+      type: 'GET',
+      cache: true,
+      dataSrc: 'data'
+    },
+    columns: [
+      { data: 'patientId' },
+      { data: 'given' },
+      { data: 'family' },
+      { data: 'dob' },
+      { data: 'sex' },
+      { data: 'phone' },
+      { data: 'email' },
+      { data: 'sourceHospital' },
+      { data: 'version' },
+      {
+        data: null,
+        orderable: false,
+        className: 'text-center',
+        render: function (data, type, row) {
+          return '<a href="/doctor/patient/' + row.id + '" class="btn btn-sm btn-primary me-1">View</a>' +
+                 '<a href="/doctor/create-patient-account/' + row.id + '?patientId=' + encodeURIComponent(row.patientId) + '" class="btn btn-sm btn-success me-1">Create Patient Account</a>' +
+                 '<button class="btn btn-sm btn-danger btn-delete-patient" data-id="' + row.id + '" data-name="' + row.given + ' ' + row.family + '">Delete</button>';
+        }
+      }
+    ],
+    pageLength: 10,
+    order: [[0, 'asc']],
+    language: {
+      emptyTable: 'No patients found.',
+      loadingRecords: 'Loading patients...',
+      zeroRecords: 'No matching patients found.'
+    }
+  });
+
+  // Refresh button — reloads data from backend, keeps current page
+  $('#refreshTableBtn').on('click', function () {
+    table.ajax.reload(null, false);
+  });
+
+  // Delete patient — event delegation for dynamically rendered rows
+  $('#patientsTable').on('click', '.btn-delete-patient', function () {
+    var patientId = $(this).data('id');
+    var patientName = $(this).data('name');
+    if (!confirm('Are you sure you want to delete patient "' + patientName + '"?\nThis action cannot be undone.')) {
+      return;
+    }
+    var btn = $(this);
+    btn.prop('disabled', true).text('Deleting…');
+    $.ajax({
+      url: '/doctor/patient/' + patientId + '/delete',
+      type: 'POST',
+      success: function () {
+        table.ajax.reload(null, false);
+      },
+      error: function (xhr) {
+        var msg = 'Delete failed.';
+        try { msg = JSON.parse(xhr.responseText).error || msg; } catch(e) {}
+        alert(msg);
+        btn.prop('disabled', false).text('Delete');
+      }
+    });
+  });
+});
+</script>
 {% endblock %}

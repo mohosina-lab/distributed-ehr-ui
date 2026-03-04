@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container col-md-6 mx-auto mt-5">
+  <div class="card p-4 shadow-sm">
+
+    <div class="d-flex align-items-center mb-3">
+      <a href="{{ url_for('doctor_page') }}" class="btn btn-outline-secondary btn-sm me-3">← Back to Portal</a>
+      <h3 class="mb-0">Create Patient Account</h3>
+    </div>
+
+    {% if patient %}
+      {% set demo = patient.get('demographics', {}) %}
+      {% set name = demo.get('name', {}) %}
+      <div class="alert alert-info mb-3">
+        Creating login account for:
+        <strong>{{ name.get('given', '') }} {{ name.get('family', '') }}</strong>
+        {% if demo.get('dob') %} — DOB: {{ demo.get('dob') }}{% endif %}
+      </div>
+    {% endif %}
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for msg in messages %}
+          <div class="alert alert-info">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('doctor_create_patient_account') }}">
+
+      <!-- Hidden UUID — used only for redirect after submit -->
+      <input type="hidden" name="patient_uuid" value="{{ patient_uuid }}">
+
+      <!-- Patient ID (e.g. P-2026-030) — pre-filled and read-only -->
+      <div class="mb-3">
+        <label for="patient_id_display" class="form-label">Patient ID</label>
+        <input type="text"
+               class="form-control bg-light"
+               id="patient_id_display"
+               value="{{ patient_id_field }}"
+               readonly>
+        <!-- actual submitted value -->
+        <input type="hidden" name="patient_id_field" value="{{ patient_id_field }}">
+        <div class="form-text text-muted">Automatically set from the selected patient record.</div>
+      </div>
+
+      <!-- Username -->
+      <div class="mb-3">
+        <label for="username" class="form-label">Username</label>
+        <input type="text"
+               class="form-control"
+               id="username"
+               name="username"
+               placeholder="e.g., jane.doe"
+               required>
+      </div>
+
+      <!-- One-time Password -->
+      <div class="mb-3">
+        <label for="password" class="form-label">One-Time Password</label>
+        <input type="password"
+               class="form-control"
+               id="password"
+               name="password"
+               placeholder="Set a temporary password for the patient"
+               required>
+        <div class="form-text text-muted">The patient should change this after first login.</div>
+      </div>
+
+      <div class="d-grid gap-2">
+        <button type="submit" class="btn btn-success">Create Patient Account</button>
+        <a href="{{ url_for('doctor_patient_detail', patient_uuid=patient_uuid) }}" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+
+    </form>
+  </div>
+</div>
+{% endblock %}

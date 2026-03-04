@@ -3,36 +3,41 @@
 {% block content %}
 <div class="container col-md-5 mx-auto mt-5">
   <div class="card p-4 shadow-sm">
-    <h2 class="mb-4 text-center">Register</h2>
+    <h2 class="mb-1 text-center">Doctor Registration</h2>
+    <p class="text-center text-muted mb-4">Only doctors can self-register. Patient accounts are created by a doctor.</p>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for msg in messages %}
+          <div class="alert alert-info">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
 
     <form method="POST">
-
-      <!-- Role selection>
-      <div class="mb-3">
-        <label for="role" class="form-label">Login as</label>
-        <select class="form-select" id="role" name="role" required>
-          <option value="doctor">Doctor</option>
-          <option value="patient">Patient</option>
-        </select>
-      </div>
 
       <!-- Username -->
       <div class="mb-3">
         <label for="username" class="form-label">Username</label>
-        <input type="text" class="form-control" id="username" name="National ID" required>
+        <input type="text" class="form-control" id="username" name="username" placeholder="e.g., dr.johndoe" required>
       </div>
 
-      <!-- Password / Token -->
+      <!-- Password -->
       <div class="mb-3">
-        <label for="password" class="form-label">
-          Password
-        </label>
-        <input type="password" class="form-control" id="password" name="Create a password" required>
+        <label for="password" class="form-label">Password</label>
+        <input type="password" class="form-control" id="password" name="password" placeholder="Create a password" required>
+      </div>
+
+      <!-- Doctor ID -->
+      <div class="mb-3">
+        <label for="doctor_id" class="form-label">Doctor ID</label>
+        <input type="text" class="form-control" id="doctor_id" name="doctor_id" placeholder="e.g., DR-2026-001" required>
+        <div class="form-text text-muted">Your assigned hospital doctor identifier.</div>
       </div>
 
       <div class="d-grid">
         <button type="submit" class="btn btn-primary">
-          Register
+          Register as Doctor
         </button>
       </div>
 
@@ -40,7 +45,7 @@
 
     <div class="text-center mt-3">
       <small class="text-muted">
-        Create a password to gain credentials to the system.
+        Already have an account? <a href="/login">Log in</a>
       </small>
     </div>
 

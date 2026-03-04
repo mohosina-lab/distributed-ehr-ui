@@ -2,22 +2,20 @@
 
 {% block content %}
 <div class="container col-md-5 mx-auto mt-5">
-  <div class="card p-4 shadow-sm">
-    <h2 class="mb-3 text-center">Distributed EHR</h2>
-
-    <p class="text-muted text-center mb-4">
-      Please log in to access the system.
+  <div class="card p-4 shadow-sm text-center">
+    <h2 class="mb-3">Distributed EHR</h2>
+    <p class="text-muted mb-4">
+      A distributed Electronic Health Records system.<br>
+      Please log in or register to access the system.
     </p>
 
     <div class="d-grid gap-3">
-      <a class="btn btn-primary btn-lg" href="/login?role=doctor">
-        Login as Doctor or Patient
-      </a>
+      <a class="btn btn-primary btn-lg" href="/login">Log In</a>
+      <a class="btn btn-outline-secondary" href="/patient/register">Register</a>
     </div>
 
     <hr class="my-4">
-
-    <p class="small text-muted text-center mb-0">
+    <p class="small text-muted mb-0">
       Learn more <a href="/about">About Us</a>
     </p>
   </div>
